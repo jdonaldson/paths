@@ -1,4 +1,7 @@
 package error;
 class Error {
-    public function new() {}
+    var message : String;
+    public function new() {
+        this.message = "Error";
+    }
 }

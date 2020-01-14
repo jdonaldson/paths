@@ -2,6 +2,7 @@
 import haxe.macro.Expr;
 import haxe.macro.Context;
 import haxe.macro.Type;
+import haxe.macro.Context.currentPos as pos;
 
 class GenericParamBuilder {
 
@@ -10,25 +11,22 @@ class GenericParamBuilder {
             case TAbstract(_.get().name => "Null", [type = TAbstract(_,[])]) : {
                 return parseType(type, true);
             }
-            case TAbstract(abs, []):  {
+            case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
                 switch abs.get().name {
-                    case "Int" : {
-                        macro CheckedParser.parseInt(pair[1], $v{opt});
+                    case "Int"    : macro CheckedParser.parseInt(pair[1], $v{opt});
+                    case "String" : macro CheckedParser.parseString(pair[1], $v{opt});
+                    case "Float"  : macro CheckedParser.parseFloat(pair[1], $v{opt});
+                    case "Bool"   : macro CheckedParser.parseBool(pair[1], $v{opt});
+                    default : {
+                        throw new Error("Not a valid abstract type", pos());
+                        macro null;
                     }
-                    case "String" : {
-                        macro CheckedParser.parseString(pair[1], $v{opt});
-                    }
-                    case "Float" : {
-                        macro CheckedParser.parseFloat(pair[1], $v{opt});
-                    }
-                    case "Bool" : {
-                        macro CheckedParser.parseBool(pair[1], $v{opt});
-                    }
-
-                    default : macro null;
                 }
             }
-            default : macro null;
+            default : {
+                throw new Error("Not a valid abstract type", pos());
+                macro null;
+            }
         }
 
     }
@@ -50,7 +48,7 @@ class GenericParamBuilder {
                     pos : Context.currentPos()
                 }
                 var p = Context.signature(t);
-                var class_name = 'ParamParser_' + haxe.macro.Context.signature(p);
+                var class_name = 'ParamParser_' + p;
                 var ctype = haxe.macro.TypeTools.toComplexType(ttanon);
 
                 var def = macro class $class_name {

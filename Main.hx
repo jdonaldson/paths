@@ -3,33 +3,10 @@ typedef Boo = {hi : Int};
 
 class Main {
     static function main(){
-        var o = new Params<{?hi:Int}>().parse("hi=4");
-        trace(o + " is the value for o");
-
-        var f = function(page : Page, params: String){
-            switch [page, params] {
-                case [Home, _ ] : {
-                    trace(params + " is the value for params");
-                    trace("HI");
-                }
-                default : trace("NO");
-            }
-        }
-        // var router = Paths.buildRouter(Page);
-
-        // var page = router(["Home"]);
-        // f(page,"foo=3&bar=2");
-
-        // var o = router(["Home"]);
-        // trace(o + " is the value for o");
-
-        // var p = router(["Foo","Baz", "1"]);
-        // trace(p + " is the value for p");
-
-        // var steps = "Scales/Guitar/Chromatic".split("/");
-
-        // var q = router(steps);
-        // trace(q + " is the value for q");
+        var pth  = new Path<Page>();
+        trace(pth.parse("Home") + " is the value for pth.parse('Home')");
+        var prm = new Params<{?hi:Int}>();
+        trace(prm.parse("hi=4") + " is the value for prm.parse('hi=4')");
 
     }
 }
@@ -47,14 +24,14 @@ enum abstract Bar(String) from String to String {
 enum Page {
     Home;
     Foo(bar : Bar, val : Int);
-    Scales(instrument:GuitarMember, scale:Scale);
-    Intervals(instrument:GuitarMember, scale:Scale, key:Note);
-    ChordProgressionPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
-    SuspendedChordsPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
-    PowerChordsPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
-    ScaleNotesPage(instrument:GuitarMember, scale:Scale, key:Note);
-    ChordNotesPage(instrument:GuitarMember, scale:Scale, key:Note);
-    NoteOverviewPage(instrument:GuitarMember, key:Note);
+    // Scales(instrument:GuitarMember, scale:Scale);
+    // Intervals(instrument:GuitarMember, scale:Scale, key:Note);
+    // ChordProgressionPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
+    // SuspendedChordsPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
+    // PowerChordsPage(instrument:GuitarMember, scale:Scale, key:Note, highlighted:Scale);
+    // ScaleNotesPage(instrument:GuitarMember, scale:Scale, key:Note);
+    // ChordNotesPage(instrument:GuitarMember, scale:Scale, key:Note);
+    // NoteOverviewPage(instrument:GuitarMember, key:Note);
 }
 
 @:enum abstract GuitarMember(String) from String to String {
