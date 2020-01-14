@@ -1,3 +1,4 @@
+package parser;
 import error.InvalidParse;
 
 class CheckedParser {
@@ -28,11 +29,11 @@ class CheckedParser {
             return res > 0 || res < 0;
         }
     }
-    public static function parseString(arg:String, optional=false) : String {
+    public static function parseString(arg:String, optional=false, url_decode = true) : String {
         if (arg == null && !optional){
             throw new InvalidParse();
         } else {
-            return arg;
+            return url_decode ? StringTools.urlDecode(arg) : arg;
         }
     }
 

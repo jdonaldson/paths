@@ -1,3 +1,4 @@
+package builder;
 #if macro
 import haxe.macro.Expr;
 import haxe.macro.Context;
@@ -15,9 +16,12 @@ class GenericPathBuilder {
                 var ctype =TypeTools.toComplexType(tenum);
                 var expr =  buildSwitchFromType(tenum);
                 var def = macro class $class_name {
-                    public function new() {}
+                    var split : String;
+                    public function new(split = "/") {
+                        this.split = split;
+                    }
                     public function parse(str:String) : $ctype {
-                        var steps = str.split("/");
+                        var steps = str.split(this.split);
                         return ${expr};
                     }
                 }
@@ -96,10 +100,10 @@ class GenericPathBuilder {
             case TEnum(_,[]) : buildSwitchFromType(type);
             case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
                 switch (abs.get().name) {
-                    case "String" : macro CheckedParser.parseString(steps[$v{idx++}], $v{optional});
-                    case "Int"    : macro CheckedParser.parseInt(steps[$v{idx++}],    $v{optional});
-                    case "Float"  : macro CheckedParser.parseFloat(steps[$v{idx++}],  $v{optional});
-                    case "Bool"   : macro CheckedParser.parseBool(steps[$v{idx++}],   $v{optional});
+                    case "String" : macro parser.CheckedParser.parseString(steps[$v{idx++}], $v{optional});
+                    case "Int"    : macro parser.CheckedParser.parseInt(steps[$v{idx++}],    $v{optional});
+                    case "Float"  : macro parser.CheckedParser.parseFloat(steps[$v{idx++}],  $v{optional});
+                    case "Bool"   : macro parser.CheckedParser.parseBool(steps[$v{idx++}],   $v{optional});
                     default : {
                         throw new Error("Not a valid abstract type", pos());
                         macro null;

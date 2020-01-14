@@ -1,3 +1,3 @@
-@:genericBuild(GenericPathBuilder.build())
+@:genericBuild(builder.GenericPathBuilder.build())
 class Path <T>{}
 

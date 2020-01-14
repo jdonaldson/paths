@@ -1,3 +1,4 @@
+package builder;
 #if macro
 import haxe.macro.Expr;
 import haxe.macro.Context;
@@ -13,10 +14,10 @@ class GenericParamBuilder {
             }
             case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
                 switch abs.get().name {
-                    case "Int"    : macro CheckedParser.parseInt(pair[1], $v{opt});
-                    case "String" : macro CheckedParser.parseString(pair[1], $v{opt});
-                    case "Float"  : macro CheckedParser.parseFloat(pair[1], $v{opt});
-                    case "Bool"   : macro CheckedParser.parseBool(pair[1], $v{opt});
+                    case "Int"    : macro parser.CheckedParser.parseInt(pair[1], $v{opt});
+                    case "String" : macro parser.CheckedParser.parseString(pair[1], $v{opt});
+                    case "Float"  : macro parser.CheckedParser.parseFloat(pair[1], $v{opt});
+                    case "Bool"   : macro parser.CheckedParser.parseBool(pair[1], $v{opt});
                     default : {
                         throw new Error("Not a valid abstract type", pos());
                         macro null;
