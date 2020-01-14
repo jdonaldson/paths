@@ -1,23 +1,24 @@
+// import Paths;
 typedef Boo = {hi : Int};
+
 class Main {
     static function main(){
-        // var router = Paths.buildRouter(Page);
+        var o = new Params<{?hi:Int}>().parse("hi=4");
+        trace(o + " is the value for o");
 
-
-        var router = Paths.buildRouter(Page);
-        var param_parser = Paths.buildParamParser(TParams);
-        var f = function(page : Page, params: TParams){
+        var f = function(page : Page, params: String){
             switch [page, params] {
-                case [Home, {hi:n}] : {
-                    trace('yeo');
-                    trace(n + " is the value for n");
+                case [Home, _ ] : {
+                    trace(params + " is the value for params");
+                    trace("HI");
                 }
                 default : trace("NO");
             }
         }
-        var params = param_parser("foo=3&bar=2");
-        var page = router(["Home"]);
-        f(page,params);
+        // var router = Paths.buildRouter(Page);
+
+        // var page = router(["Home"]);
+        // f(page,"foo=3&bar=2");
 
         // var o = router(["Home"]);
         // trace(o + " is the value for o");
@@ -33,21 +34,16 @@ class Main {
     }
 }
 
-typedef TParams = {
-    ?hi : Int,
-    ?ho : String
-}
 
 
 enum abstract Bar(String) from String to String {
-   var Baz ='heeey';
-   var Bing='hii';
+   var Baz = 'heeey';
+   var Bing= 'hii';
    var Boo = 'hooo';
 }
 
 
 
-@:case_insensitive
 enum Page {
     Home;
     Foo(bar : Bar, val : Int);
