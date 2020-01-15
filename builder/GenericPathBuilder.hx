@@ -221,6 +221,9 @@ class GenericPathBuilder {
                     }
                 }
             }
+            case TAbstract(abs, []) if (abs.get().module == "haxe.Int64") : {
+                macro this.parser.parseInt64(steps[$v{idx++}], $v{optional});
+            }
             case TAbstract(abs, []) : {
                 var impl = abs.get().impl.get();
                 return buildSwitchFromAbsImpl(impl, optional, idx);

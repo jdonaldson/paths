@@ -37,5 +37,12 @@ class CheckedParser {
             return url_decode ? StringTools.urlDecode(arg) : arg;
         }
     }
+    public function parseInt64(arg:String, optional=false) : haxe.Int64 {
+        if (arg == null && !optional) {
+            throw new InvalidParse();
+        } else {
+            return haxe.Int64.parseString(arg);
+        }
+    }
 
 }
