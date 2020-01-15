@@ -15,10 +15,14 @@ class GenericPathBuilder {
             case TInst(_, [tenum = TEnum(enm,[])]) : {
                 var ctype =TypeTools.toComplexType(tenum);
                 var expr =  buildSwitchFromType(tenum);
-                var def = macro class $class_name {
+                var def = macro class $class_name implements ParseBase<$ctype>{
                     var split : String;
-                    public function new(split = "/") {
+                    var parser : parser.CheckedParser;
+                    public function new(split = "/", ?parser : parser.CheckedParser) {
                         this.split = split;
+                        if (parser == null)  parser = new parser.CheckedParser();
+                        this.parser = parser;
+
                     }
                     public function parse(str:String) : $ctype {
                         var steps = str.split(this.split);
@@ -100,10 +104,10 @@ class GenericPathBuilder {
             case TEnum(_,[]) : buildSwitchFromType(type);
             case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
                 switch (abs.get().name) {
-                    case "String" : macro parser.CheckedParser.parseString(steps[$v{idx++}], $v{optional});
-                    case "Int"    : macro parser.CheckedParser.parseInt(steps[$v{idx++}],    $v{optional});
-                    case "Float"  : macro parser.CheckedParser.parseFloat(steps[$v{idx++}],  $v{optional});
-                    case "Bool"   : macro parser.CheckedParser.parseBool(steps[$v{idx++}],   $v{optional});
+                    case "String" : macro this.parser.parseString(steps[$v{idx++}], $v{optional});
+                    case "Int"    : macro this.parser.parseInt(steps[$v{idx++}],    $v{optional});
+                    case "Float"  : macro this.parser.parseFloat(steps[$v{idx++}],  $v{optional});
+                    case "Bool"   : macro this.parser.parseBool(steps[$v{idx++}],   $v{optional});
                     default : {
                         throw new Error("Not a valid abstract type", pos());
                         macro null;

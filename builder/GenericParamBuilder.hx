@@ -14,10 +14,10 @@ class GenericParamBuilder {
             }
             case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
                 switch abs.get().name {
-                    case "Int"    : macro parser.CheckedParser.parseInt(pair[1], $v{opt});
-                    case "String" : macro parser.CheckedParser.parseString(pair[1], $v{opt});
-                    case "Float"  : macro parser.CheckedParser.parseFloat(pair[1], $v{opt});
-                    case "Bool"   : macro parser.CheckedParser.parseBool(pair[1], $v{opt});
+                    case "Int"    : macro this.parser.parseInt(pair[1], $v{opt});
+                    case "String" : macro this.parser.parseString(pair[1], $v{opt});
+                    case "Float"  : macro this.parser.parseFloat(pair[1], $v{opt});
+                    case "Bool"   : macro this.parser.parseBool(pair[1], $v{opt});
                     default : {
                         throw new Error("Not a valid abstract type", pos());
                         macro null;
@@ -52,12 +52,15 @@ class GenericParamBuilder {
                 var class_name = 'ParamParser_' + p;
                 var ctype = haxe.macro.TypeTools.toComplexType(ttanon);
 
-                var def = macro class $class_name {
+                var def = macro class $class_name implements ParseBase<$ctype>{
                     var sep : String;
                     var pair_sep : String;
-                    public function new(separator = "&", pair_separator = "="){
+                    var parser : parser.CheckedParser;
+                    public function new(separator = "&", pair_separator = "=", ?parser : parser.CheckedParser){
                         this.sep = separator;
                         this.pair_sep = pair_separator;
+                        if (parser == null) parser = new parser.CheckedParser();
+                        this.parser = parser;
                     }
                     public function parse(str:String) : $ctype {
                         var obj = {};

@@ -1,5 +1,3 @@
-// import Paths;
-typedef Boo = {hi : Int};
 
 class Main {
     static function main(){
