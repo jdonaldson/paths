@@ -15,6 +15,7 @@ class GenericPathBuilder {
             case TInst(_, [tenum = TEnum(enm,[])]) : {
                 var ctype =TypeTools.toComplexType(tenum);
                 var expr =  buildSwitchFromType(tenum);
+                var path_expr = buildPathExprFromType(tenum);
                 var def = macro class $class_name implements ParseBase<$ctype>{
                     var split : String;
                     var parser : parser.CheckedParser;
@@ -28,6 +29,9 @@ class GenericPathBuilder {
                         var steps = str.split(this.split);
                         return ${expr};
                     }
+                    public function toPath(path:$ctype) : String {
+                        return ${path_expr};
+                    }
                 }
                 haxe.macro.Context.defineType(def);
                 return Context.getType(class_name);
@@ -36,6 +40,109 @@ class GenericPathBuilder {
                 null;
             }
         }
+    }
+	private static function detectOverridePath(field:EnumField, ctorName:String, urlParts:Array<Expr>):String {
+		if (field.meta.has("path")) {
+			var k:MetadataEntry = field.meta.extract("path")[0];
+			var path_expr:ExprDef = k.params[0].expr;
+			return switch (path_expr) {
+				case EConst(CString(str)):
+					str;
+				case _:
+					urlParts = [macro $v{ctorName}];
+					null;
+			}
+		};
+		return null;
+	}
+	private static function pathWithOverride(path_override:String, argIdent:Expr):Expr {
+		if (path_override == null) {
+			return argIdent;
+		} else {
+			return macro $v{path_override};
+		}
+	}
+	private static function argsToPath(arg:{name:String, opt:Bool, t:Type}, path_override:String, urlParts:Array<Expr>, capturedNames:Array<Expr>) {
+		switch (Context.follow(arg.t)) {
+			case TInst(ct, []):
+				var argIdent:Expr = macro $i{arg.name};
+				capturedNames.push(argIdent);
+				urlParts.push(pathWithOverride(path_override, $v{argIdent}));
+			case TEnum(enm, []):
+				var argIdent:Expr = macro $i{arg.name};
+				capturedNames.push(argIdent);
+				urlParts.push(pathWithOverride(path_override, macro PathRouter.toPath($argIdent)));
+			case TAbstract(abstr, []) if (abstr.get().module == "StdTypes"):
+				var argIdent:Expr = macro $i{arg.name};
+				capturedNames.push(argIdent);
+				var argIdent:Expr = switch (abstr.get().name) {
+					case "String":
+						macro ${argIdent};
+					case "Int":
+						macro Std.string(${argIdent});
+					case "Float":
+						macro Std.string(${argIdent});
+					default:
+						macro null;
+				}
+				if (argIdent != null) {
+					urlParts.push(pathWithOverride(path_override, argIdent));
+				}
+			case TAbstract(abstr, []):
+				var argIdent:Expr = macro $i{arg.name};
+				capturedNames.push(argIdent);
+				var impl:ClassType = abstr.get().impl.get();
+				var argIdent:Expr = switch (impl.module) {
+					case "haxe.Int64":
+						macro Int64.toStr(${argIdent});
+					default:
+						macro ${argIdent};
+				};
+				urlParts.push(pathWithOverride(path_override, argIdent));
+			case _:
+		}
+	}
+
+    public static function buildPathExprFromType(type : Type) : Expr {
+        var en:EnumType = switch Context.follow(type) {
+            case TEnum(_.get() => en, _): en;
+            case _: throw new Error("not an enum", Context.currentPos());
+        }
+
+        var cases:Array<Case> = [];
+        for (ctorName in en.names) {
+            var field:EnumField = en.constructs[ctorName];
+            var ctorIdent:Expr = macro $i{ctorName};
+            var urlParts:Array<Expr> = [macro $v{ctorName}];
+            if (field.meta.extract("catchrest").length > 0) {
+                urlParts = [];
+            }
+
+            var path_override:String = detectOverridePath(field, ctorName, urlParts);
+            switch (field.type) {
+                case TEnum(_):
+                    cases.push({
+                        values: [ctorIdent],
+                        expr: macro $v{ctorName}
+                    });
+                case TFun(args, _):
+                    var capturedNames:Array<Expr> = [];
+                    for (arg in args) {
+                        argsToPath(arg, path_override, urlParts, capturedNames);
+                    }
+                    cases.push({
+                        values: [macro $ctorIdent($a{capturedNames})],
+                        expr: macro $a{urlParts}.join("/")
+                    });
+                case _:
+                    throw "assert";
+            }
+        }
+
+        return {
+            pos: Context.currentPos(),
+            expr: ESwitch(macro path, cases, null)
+        };
     }
 
     public static function buildSwitchFromType(type:Type, optional=false, idx=0) : Expr {

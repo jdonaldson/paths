@@ -6,6 +6,9 @@ class Main {
         var prm = new Params<{?hi:Int}>();
         trace(prm.parse("hi=4") + " is the value for prm.parse('hi=4')");
 
+        var path = pth.toPath(Foo(Baz,1));
+        trace(path + " is the value for path");
+
     }
 }
 
