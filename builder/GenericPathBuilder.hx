@@ -241,14 +241,13 @@ class GenericPathBuilder {
 
     public static function buildSwitchFromAbsImpl(impl:ClassType, optional=false, idx=0) : Expr {
         var switched_expr = macro steps[$v{idx++}];
-        var cases = Lambda.map(impl.statics.get(), s->{
-            var string = switch s.meta.extract(":value")[0].params[0].expr {
-                case ECast({expr : EConst(CString(str, _))},null) : str;
+        var cases  : Array<Case> = Lambda.map(impl.statics.get(), s->{
+            var const_expr : Expr = switch s.meta.extract(":value")[0].params[0].expr {
+                case ECast(expr, null) : expr;
                 default : null;
-            }
-            trace(string + " is the value for string");
+            };
             return {
-                values : [macro $v{string}],
+                values : [const_expr],
                 expr : macro $i{s.name},
                 guard : null
             };
