@@ -3,8 +3,12 @@ class Main {
     static function main(){
         var pth  = new Path<Page>();
         trace(pth.parse("Home") + " is the value for pth.parse('Home')");
+
         var prm = new Params<{?hi:Int}>();
         trace(prm.parse("hi=4") + " is the value for prm.parse('hi=4')");
+
+        trace(pth.parse('Foo/heeey/100') + " is the value for pth.parse('Foo/Bing/100')");
+
 
         var path = pth.toPath(Foo(Baz,1));
         trace(path + " is the value for path");

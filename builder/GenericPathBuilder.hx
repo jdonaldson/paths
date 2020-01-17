@@ -76,14 +76,10 @@ class GenericPathBuilder {
 				var argIdent:Expr = macro $i{arg.name};
 				capturedNames.push(argIdent);
 				var argIdent:Expr = switch (abstr.get().name) {
-					case "String":
-						macro ${argIdent};
-					case "Int":
-						macro Std.string(${argIdent});
-					case "Float":
-						macro Std.string(${argIdent});
-					default:
-						macro null;
+					case "String" : macro ${argIdent};
+					case "Int"    : macro Std.string(${argIdent});
+					case "Float"  : macro Std.string(${argIdent});
+					default       : macro null;
 				}
 				if (argIdent != null) {
 					urlParts.push(pathWithOverride(path_override, argIdent));
@@ -246,8 +242,13 @@ class GenericPathBuilder {
     public static function buildSwitchFromAbsImpl(impl:ClassType, optional=false, idx=0) : Expr {
         var switched_expr = macro steps[$v{idx++}];
         var cases = Lambda.map(impl.statics.get(), s->{
+            var string = switch s.meta.extract(":value")[0].params[0].expr {
+                case ECast({expr : EConst(CString(str, _))},null) : str;
+                default : null;
+            }
+            trace(string + " is the value for string");
             return {
-                values : [macro $v{s.name}],
+                values : [macro $v{string}],
                 expr : macro $i{s.name},
                 guard : null
             };
