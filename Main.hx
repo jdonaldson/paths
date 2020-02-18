@@ -9,8 +9,7 @@ class Main {
 
         trace(pth.parse('Foo/heeey/100') + " is the value for pth.parse('Foo/Bing/100')");
 
-
-        var path = pth.toPath(Foo(Baz,1));
+        var path = pth.toPath(Foo(Baz,100));
         trace(path + " is the value for path");
 
     }

@@ -7,6 +7,7 @@ import haxe.macro.TypeTools;
 import haxe.macro.Context.currentPos as pos;
 
 class GenericPathBuilder {
+
     public static function build() {
         var t = Context.getLocalType();
         var p = Context.signature(t);
@@ -45,8 +46,8 @@ class GenericPathBuilder {
 
 
 
-    public static function buildSwitchFromType(type:Type, optional=false, idx=0) : Expr {
-        return switch type {
+    public static function buildSwitchFromType(type:Type, optional=false, idx=0, path_expr = true) : Expr {
+        var expr = switch type {
             case TEnum(enm, []) : {
                 var enme = enm.get();
                 var insensitive = enme.meta.has(":case_insensitive");
@@ -61,16 +62,17 @@ class GenericPathBuilder {
                     return buildCaseFromEnumField(enme.constructs.get(c.name), idx);
                 });
                 cases.push(buildDefaultCase(optional));
-                return {
+                {
                     expr : ESwitch(switched_expr, cases, null),
                     pos : pos()
                 }
             }
 			case _: {
                 throw new Error("Not a valid enum", pos());
-                return macro null;
+                macro null;
             }
         }
+        return expr;
     }
 
 
@@ -106,21 +108,41 @@ class GenericPathBuilder {
         };
     }
 
+    public static function parseValueTypeExpr(name : String, optional=false, path_expr : Expr ) : Expr {
+        var handle_expr = switch name {
+            case "String" : macro this.parser.parseString;
+            case "Int"    : macro this.parser.parseInt;
+            case "Float"  : macro this.parser.parseFloat;
+            case "Bool"   : macro this.parser.parseBool;
+            default : {
+                throw new Error("Not a valid value abstract type", pos());
+                macro null;
+            }
+        }
+        return macro $handle_expr($path_expr, $v{optional});
+    }
 
-    public static function buildExprFromType(type : Type, optional=false, idx=0) : Expr {
+    public static function renderValueTypeExpr(name : String, optional=false, path_expr : Expr ) : Expr {
+        var handle_expr = switch name {
+            case "String" : macro this.parser.renderString;
+            case "Int"    : macro this.parser.renderInt;
+            case "Float"  : macro this.parser.renderFloat;
+            case "Bool"   : macro this.parser.renderBool;
+            default : {
+                throw new Error("Not a valid value abstract type", pos());
+                macro null;
+            }
+        }
+        return macro $handle_expr($path_expr, $v{optional});
+    }
+
+    public static function buildExprFromType(type : Type, optional=false, idx=0, parse_expr = true) : Expr {
         return switch type {
-            case TEnum(_,[]) : buildSwitchFromType(type);
             case TAbstract(abs, []) if (abs.get().module == "StdTypes") : {
-                switch (abs.get().name) {
-                    case "String" : macro this.parser.parseString(steps[$v{idx++}], $v{optional});
-                    case "Int"    : macro this.parser.parseInt(steps[$v{idx++}],    $v{optional});
-                    case "Float"  : macro this.parser.parseFloat(steps[$v{idx++}],  $v{optional});
-                    case "Bool"   : macro this.parser.parseBool(steps[$v{idx++}],   $v{optional});
-                    default : {
-                        throw new Error("Not a valid abstract type", pos());
-                        macro null;
-                    }
-                }
+                parseValueTypeExpr(abs.get().name, optional, macro steps[$v{idx++}]);
+            }
+            case TEnum(_,[]) : {
+                return buildSwitchFromType(type, optional, idx, parse_expr);
             }
             case TAbstract(abs, []) if (abs.get().module == "haxe.Int64") : {
                 macro this.parser.parseInt64(steps[$v{idx++}], $v{optional});
@@ -137,7 +159,7 @@ class GenericPathBuilder {
     }
 
     public static function buildDefaultCase(optional=false) : Case {
-        var expr = !optional ?  macro throw new error.InvalidParse() : macro _;
+        var expr = !optional ?  macro throw "InvalidParse" : macro _;
         return {
             values : [macro _],
             expr : expr
@@ -165,7 +187,7 @@ class GenericPathBuilder {
     }
 
     //
-    // to-path-oriented methods:
+    // topath-oriented methods:
     //
 
 
